@@ -24,12 +24,12 @@ public class DocumentController {
         var res = service.findOrCreate(req);
         return ResponseEntity.status(HttpStatus.CREATED).body(res);
     }
-    @PostMapping("/{documentId}/extractions")
+    @PostMapping("documents/{documentId}/extractions")
     public ResponseEntity<CreateExtractionResponse> addExtraction(@PathVariable int documentId, @Valid @RequestBody CreateExtractionRequest req){
         var res = service.createOrGet(documentId,req);
         return ResponseEntity.status(HttpStatus.CREATED).body(res);
     }
-    @GetMapping("/{documentId}/extractions/latest")
+    @GetMapping("documents/{documentId}/extractions/latest")
     public LatestExtractionResponse getLatestExtractions(@PathVariable int documentId){
         return service.getLatestExtraction(documentId);
 
