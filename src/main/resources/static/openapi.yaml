@@ -1,0 +1,147 @@
+openapi: 3.0.3
+info:
+  title: Document Insights API
+  version: 0.1.0
+  license:
+    name: MIT
+servers:
+  - url: http://localhost:8080
+    description: Local dev
+
+# Apply simple header-based auth to all operations (satisfies linter)
+security:
+  - internalApiKey: []
+
+paths:
+  /api/documents:
+    post:
+      operationId: createOrGetDocument
+      summary: Create or get a document by hash (idempotent)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [documentHash]
+              properties:
+                documentHash:
+                  type: string
+                  description: Base64url SHA3-256 content hash
+                filename:
+                  type: string
+                mime:
+                  type: string
+                pages:
+                  type: integer
+                  format: int32
+      responses:
+        "200":
+          description: Upserted or found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  documentId:
+                    type: integer
+                    format: int32
+                  documentHash:
+                    type: string
+        "400":
+          description: Bad request (missing/invalid body)
+        "401":
+          description: Missing or invalid API key
+        "409":
+          description: Conflict on insert (should not happen with idempotency)
+
+  /api/documents/{id}/extractions:
+    post:
+      operationId: createExtraction
+      summary: Create an extraction for a document
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer, format: int32 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [extractionVersion, fields]
+              properties:
+                extractionVersion: { type: string }
+                modelName:        { type: string }
+                runtimeMs:        { type: integer, format: int32 }
+                fields:
+                  type: array
+                  items:
+                    type: object
+                    required: [name, value]
+                    properties:
+                      name:       { type: string }
+                      value:      { type: string }
+                      units:      { type: string, nullable: true }
+                      confidence: { type: number, format: double, nullable: true }
+                      page:       { type: integer, format: int32, nullable: true }
+                      bbox:       { type: string, nullable: true }
+                      method:     { type: string, nullable: true }
+      responses:
+        "201":
+          description: Created
+        "400":
+          description: Bad request (validation)
+        "401":
+          description: Missing or invalid API key
+        "404":
+          description: Document not found
+        "409":
+          description: Extraction version already exists for this document
+
+  /api/documents/{id}/extractions/latest:
+    get:
+      operationId: getLatestExtraction
+      summary: Get latest extraction for a document
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer, format: int32 }
+      responses:
+        "200":
+          description: Latest extraction
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  documentId:        { type: integer }
+                  extractionVersion: { type: string }
+                  modelName:         { type: string, nullable: true }
+                  runtimeMs:         { type: integer, nullable: true }
+                  createdAt:         { type: string, format: date-time, nullable: true }
+                  fields:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name:       { type: string }
+                        value:      { type: string }
+                        units:      { type: string, nullable: true }
+                        confidence: { type: number, nullable: true }
+                        page:       { type: integer, nullable: true }
+                        bbox:       { type: string, nullable: true }
+                        method:     { type: string, nullable: true }
+        "401":
+          description: Missing or invalid API key
+        "404":
+          description: Document or extraction not found
+
+components:
+  securitySchemes:
+    internalApiKey:
+      type: apiKey
+      in: header
+      name: X-Internal-Key

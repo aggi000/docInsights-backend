@@ -52,7 +52,7 @@ public class DocumentsService {
         var extraction = extractionRepo.findTopByDocumentOrderByCreatedAtDesc(doc).orElseThrow(() -> new NotFoundException("document not found"));
         var fieldDtos = fieldsRepo.findByExtraction(extraction).stream()
                 .map(f->new FieldDTO(
-                        f.getName(),f.getValue(),f.getUnits(),f.getConfidence(),f.getPage(),f.getMethod()
+                        f.getName(),f.getValue(),f.getUnits(),f.getInvoiceDate(),f.getConfidence(),f.getPage(),f.getMethod()
                 )).toList();
 
         return new LatestExtractionResponse(documentId,extraction.getExtractionVersion(),extraction.getModelName(), extraction.getRuntimeMs(), extraction.getCreatedAt(), fieldDtos);

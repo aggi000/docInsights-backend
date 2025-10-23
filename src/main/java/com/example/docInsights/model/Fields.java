@@ -6,6 +6,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.sql.Timestamp;
+import java.util.Date;
+
 @Data
 @Entity
 @AllArgsConstructor
@@ -20,6 +22,7 @@ public class Fields {
     private Extraction extraction;
     private String name;
     private String value;
+    private Date invoiceDate;
     private String units;
     private double confidence;
     private int page;
