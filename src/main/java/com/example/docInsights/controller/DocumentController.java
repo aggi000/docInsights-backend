@@ -8,6 +8,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 
 @RestController
 @RequestMapping("/api")
@@ -32,6 +34,13 @@ public class DocumentController {
     @GetMapping("documents/{documentId}/extractions/latest")
     public LatestExtractionResponse getLatestExtractions(@PathVariable int documentId){
         return service.getLatestExtraction(documentId);
-
+    }
+    @GetMapping("documents/extractions/{docId}")
+    public SummaryDTO getExtraction(@PathVariable int docId){
+        return service.getExtractionSummary(docId);
+    }
+    @GetMapping("documents/allExtractions")
+    public List<DocumentWithSummaryResponse> getExtraction(){
+        return service.getAllExtractionSummary();
     }
 }

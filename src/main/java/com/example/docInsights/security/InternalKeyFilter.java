@@ -29,6 +29,12 @@ public class InternalKeyFilter extends OncePerRequestFilter {
         if (HttpMethod.GET.matches(method) && path.matches("^/api/documents/\\d+/extractions/latest$")) {
             return true;
         }
+        if (HttpMethod.GET.matches(method) && path.matches("^/api/documents/extractions/\\d$")) {
+            return true;
+        }
+        if (HttpMethod.GET.matches(method) && path.matches("^/api/documents/allExtractions")) {
+            return true;
+        }
 
         // for all posts
         return false;

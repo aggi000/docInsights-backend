@@ -10,6 +10,10 @@ import com.example.docInsights.repository.ExtractRepo;
 import com.example.docInsights.repository.FieldsRepo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.PathVariable;
+
+import java.util.Comparator;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -47,6 +51,14 @@ public class DocumentsService {
         return new CreateExtractionResponse(extraction.getExtractionId(),extraction.getExtractionVersion(),extraction.getCreatedAt());
     }
 
+    public List<FieldDTO> getFields(@PathVariable int documentId){
+        var doc = documentRepo.findById(documentId).orElseThrow(() -> new NotFoundException("document not found"));
+        var extraction = extractionRepo.findTopByDocumentOrderByCreatedAtDesc(doc).orElseThrow(() -> new NotFoundException("document not found"));
+        return fieldsRepo.findByExtraction(extraction).stream()
+                .map(f->new FieldDTO(
+                        f.getName(),f.getValue(),f.getUnits(),f.getInvoiceDate(),f.getConfidence(),f.getPage(),f.getMethod()
+                )).toList();
+    }
     public LatestExtractionResponse getLatestExtraction(int documentId) {
         var doc = documentRepo.findById(documentId).orElseThrow(() -> new NotFoundException("document not found"));
         var extraction = extractionRepo.findTopByDocumentOrderByCreatedAtDesc(doc).orElseThrow(() -> new NotFoundException("document not found"));
@@ -57,4 +69,29 @@ public class DocumentsService {
 
         return new LatestExtractionResponse(documentId,extraction.getExtractionVersion(),extraction.getModelName(), extraction.getRuntimeMs(), extraction.getCreatedAt(), fieldDtos);
     }
+
+    public SummaryDTO getExtractionSummary(int documentId) {
+        return new SummaryDTO(getFields(documentId));
+    }
+
+    public List<DocumentWithSummaryResponse> getAllExtractionSummary() {
+        var docs = documentRepo.findAll();
+
+        return docs.stream().map(doc -> {
+            // try to build a summary; if no extraction exists yet, keep it null
+            SummaryDTO summary;
+            try {
+                summary = getExtractionSummary(doc.getDocumentId());
+            } catch (NotFoundException e) {
+                summary = null; // no latest extraction yet
+            }
+
+            return new DocumentWithSummaryResponse(
+                    doc.getDocumentId(),
+                    doc.getDocumentHash(),
+                    summary
+            );
+        }).toList();
+    }
+
 }
